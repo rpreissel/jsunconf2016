@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js – The HTML Presentation Framework</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<small><a href="https://twitter.com/RenePreissel">@RenePreissel</a> (JSUnconf 2016)</small>
+
+					<h3><a href="https://github.com/omcljs/om/wiki/Quick-Start-(om.next)">om.next</a> - React with ClojureScript</h3>
+					<span>Concepts and Ideas</span>
+				</section>
+
+			<section>
+				<section>
+						<h2>Flux Structure and Data Flow</h2>
+						<img data-src="img/Flux-Basic.svg">
+				    Unidirectional data flow
+				</section>
+
+				<section>
+						<h2>Action Creators</h2>
+						<img data-src="img/ActionCreator-Remote.svg">
+				</section>
+
+				<section>
+						<h2>State</h2>
+						<img data-src="img/Flux-State.svg">
+						Global and Local State
+				</section>
+
+				<section>
+						<h2>Functional Flux / Redux</h2>
+						<img data-src="img/Functional-Flux.svg">
+						<ul>
+							<li>
+								Only Global state - Single source of truth
+							</li>
+							<li>
+								Read only data - atomar transitions
+							</li>
+							<li>
+								Reducer / View - Pure functions
+							</li>
+						</ul>
+				</section>
+
+				<section>
+						<h2>Reducer / View - Pure functions</h2>
+						<img data-src="img/Functional-Flux.svg">
+						<pre>
+							<code data-trim data-noescape>
+//Reducers
+reduce(oldState, action) : newState
+//Views
+render(state) : vdom
+ 							</code>
+						</pre>
+				</section>
+
+				<section>
+						<h2>Open Questions</h2>
+						<img data-src="img/Functional-Flux.svg">
+						<ul>
+							<li>
+								How to intialize the state from the server?
+							</li>
+							<li>
+								How to minimize remote calls?
+							</li>
+							<li>
+								How to sync client and server state?
+							</li>
+						</ul>
+				</section>
+			</section>
+
+			<section>
+				<section>
+	 			 <h2>om.next - Overview</h2>
+	  			<img data-src="img/Om.next.svg">
+	  			<ul>
+	 				<li>
+	  					Functional Flux Framework
+	  				</li>
+	 				<li>
+	  					Global app state, pure functions
+	  				</li>
+	  				<li>
+	  					Query based - #noRest
+	  				</li>
+	  			</ul>
+	 		 </section>
+
+			 <section>
+				<h2>Terms</h2>
+				 <img width="75%" data-src="img/Om.next.svg">
+				 <ul>
+					 <li>
+							<a>Mutation:</a> Action
+					 </li>
+					 <li>
+							<a>Query:</a> Specification of required data
+					 </li>
+					 <li>
+							 <a>Reconciler:</a> Dispatcher++
+					 </li>
+				 	<li>
+						 <a>Parser:</a> Query Parser / Mutation Reducer
+					 </li>
+					 <li>
+						 <a>Remote Effect:</a> Request Remote Interaction
+					 </li>
+				 </ul>
+			</section>
+
+			<section>
+				<h2>Technical Spec</h2>
+				<ul>
+					<li>Written in ClojureScript/Clojure (David Nolen) <br/>(LISP, Functional, Immutable Data)
+					<li>Views based on React</li>
+					<li>Markup as function calls (no JSX)</li>
+				</ul>
+				<pre>
+					<code data-trim data-noescape>
+(if-not weather
+  (dom/h1 nil "No weather data available")
+  (let [current-weather (get-in weather [:weather 0])]
+    (dom/div nil
+      (dom/h1 nil (str "Weather in " (:name weather)))
+      (dom/h2 nil (str (get-in weather [:main :temp]) " °C")
+      	(dom/img #js {:src (str "http://openweathermap.org/img/w/" (:icon current-weather) ".png")}))
+      (dom/p nil (:description current-weather))))))))
+					</code>
+				</pre>
+		 </section>
+
+  </section>
+
+			<section>
+				<section>
+					<h2>Example</h2>
+					<img data-src="img/weather-app.png">
+					<div><small>Data from <a href="http://openweathermap.org/">OpenWeatherMap</a></small></div>
+				</section>
+
+				<section>
+					<h2>React Components</h2>
+					<img data-src="img/weather-app-components.png">
+				</section>
+			<section>
+				<h2>Simple View</h2>
+				<img data-src="img/weather-panel.png">
+				<pre>
+					<code data-trim data-noescape>
+(defui WeatherPanel
+  Object
+  (render [this]
+    (let [{:keys [weather]} (om/props this)]
+      (if-not weather
+        (dom/h1 nil "No weather data available")
+        (let [current-weather (get-in weather [:weather 0])]
+          (dom/div nil
+                   (dom/h1 nil (str "Weather in " (:name weather)))
+                   (dom/h2 nil (str (get-in weather [:main :temp]) " °C")
+                           (dom/img #js {:src (str "http://openweathermap.org/img/w/" (:icon current-weather) ".png")}))
+                   (dom/p nil (:description current-weather))))))))
+					</code>
+				</pre>
+		 </section>
+
+		 <section>
+		 	<h2>Simple Query</h2>
+		 	<img data-src="img/weather-input.png">
+		 	<pre>
+		 		<code data-trim data-noescape>
+ (defui CityInputPanel
+   <b>static om/IQuery
+   (query [_] '[:city])</b>
+   Object
+   (render [this]
+       (let [{:keys [<b>city</b>]} <b>(om/props this)</b>
+         {:keys [on-load]} (om/get-computed this)]
+           (dom/div nil  ...
+		 		</code>
+		 	</pre>
+		 </section>
+
+		 <section>
+		 	<h2>Queries / Mutations</h2>
+		 	<pre>
+		 		<code data-trim data-noescape>
+[:some/key]                              ;;prop
+[(:some/key {:arg :foo})]                ;;prop + params
+[{:some/key [:sub/key]}]                 ;;join + sub-select
+[:some/k1 :some/k2 {:some/k3 ...}]       ;;recursive join
+[({:some/key [:sub/key]} {:arg :foo})]   ;;join + params
+[[:foo/by-id 0]]                         ;;reference
+[(fire-missiles!)]                       ;;mutation
+[(fire-missiles! {:target :foo})]        ;;mutation + params
+{ :photo [...subquery...]
+  :video [...subquery...]
+  :comment [...subquery...] }             ;;union
+					</code>
+		 	</pre>
+			<ul>
+				<li>
+ 					Inspired from <a>GraphQL</a>
+ 				</li>
+				<li>
+ 					Based on <a href="">Datomic</a> syntax
+ 				</li>
+ 			</ul>
+		 </section>
+
+		 <section>
+		 	<h2>Query composition and <br/>dynamic parameter</h2>
+		 	<img data-src="img/QueryComposition.svg">
+		 </section>
+
+
+		<section>
+			<h3>Query composition</h3>
+			<pre>
+				<code data-trim data-noescape>
+(defui WeatherView
+  static om/IQueryParams
+  (params [_]
+    {:city "Hamburg"})
+  static om/IQuery
+  (query [_]
+    `[{:input ~(om/get-query CityInputPanel)}
+				(:weather {:city ~'?city})])
+  ...
+				</code>
+			</pre>
+			<h3>Change query parameter</h3>
+			<pre>
+				<code data-trim data-noescape>
+(om/set-query! this {:params {:city %}})
+				</code>
+			</pre>
+
+		</section>
+
+	 </section>
+
+ <section>
+	 <section>
+		<h2>Initialize Views with queries</h2>
+		<img data-src="img/OM-Next-Read.svg">
+		<pre class="fragment">
+			<code data-trim data-noescape>
+(defonce app-state (atom {:input   {:city "Hamburg"}
+                          :weather {}}))
+
+(defmethod read :input
+  [{:keys [state]} _ _]
+  (let [input (:input @state)]
+    {:value input}))
+
+
+			</code>
+		</pre>
+	 </section>
+
+	 <section>
+	 	<h2>Query Remote Data</h2>
+	 	<img data-src="img/weather-app.png">
+		<pre>
+			<code data-trim data-noescape>
+`[{:input ~(om/get-query CityInputPanel)} (<mark>:weather</mark> {:city ~'?city})])
+			</code>
+		</pre>
+	 </section>
+
+	 <section>
+		<h2>Query with Remote Request</h2>
+		<img data-src="img/OM-Next-Read-Remote.svg">
+		<pre>
+			<code data-trim data-noescape>
+read-fn(appstate,query,parameter): {:value value,:remote1 query,...}
+			</code>
+		</pre>
+	 </section>
+
+	 <section>
+		<h2>Query with Remote Result</h2>
+		<pre>
+			<code data-trim data-noescape>
+;;app-state: {:weather {:default {:fetched-city "Berlin" : data ...}}}
+
+(defmethod read :weather
+  [{:keys [state ast]} _ {:keys [city]}]
+  (let [{:keys [fetched-city] :as weather} (get-in @state [:weather :default])]
+    (if (= fetched-city city)
+      {:value weather}
+      {:remote ast})))
+			</code>
+		</pre>
+		<ul>
+			<li>Returns a remote query if the fetched city does not match the requested city</li>
+			<li>Multiple remote queries are possible</li>
+		</ul>
+	 </section>
+
+
+	 <section>
+		<h2>Send Requests</h2>
+		<pre>
+			<code data-trim data-noescape>
+(defn fetch-weather [{:keys [remote]} merge-cb]
+  (let [{[ast] :children} (om/query->ast remote)
+        city (get-in ast [:params :city])]
+    (GET (gstring/format "http://api.openweathermap.org/data/2.5/weather?q=%s,de&appid=%s&units=metric" city api-key)
+         {:handler         #(merge-cb {[:weather :default] {:data % :fetched-city city}})
+          :error-handler   #(merge-cb {[:weather :default] {:error (:status-text %)}})
+          :response-format :json
+          :keywords?       true})))
+			</code>
+		</pre>
+
+		<ul class="fragment">
+			<li>Merge for default app-state is provided by om.next</li>
+			<li>Default identity is a pair of [:keyword id]</li>
+			<li>om.next provides a server side clojure parser implementation (#noRest)</li>
+		</ul>
+	 </section>
+
+ </section>
+ <section>
+	 <section>
+		<h2>Mutations</h2>
+		<img data-src="img/OM-Next-Update.svg">
+		<pre class="fragment">
+			<code data-trim data-noescape>
+;;initiate mutation | 'this' is an om.next-component
+(om/transact! this `[(weather/set-input-city {:city ~(-> % .-target .-value)})])
+
+;;fulfil mutation
+(defmethod mutate 'weather/set-input-city
+  [{:keys [state]} _ {:keys [city]}]
+  {:action #(swap! state assoc-in [:input :city] city)})
+			</code>
+		</pre>
+	 </section>
+
+	 <section>
+		<h2>Remote Mutations</h2>
+		<img data-src="img/OM-Next-Update-Remote.svg">
+
+	 <ul class="fragment">
+	 	<li>om.next provides support for temporary ids and consolidation</li>
+	 </ul>
+	 	</section>
+ </section>
+		<section>
+			<section>
+			 <h2>Roundup</h2>
+			 <img data-src="img/Om.next.svg">
+		</section>
+		<section>
+		 <h2>om.next - Pros</h2>
+		 <img data-src="img/Om.next.svg">
+		 <ul>
+			 <li>
+					 Some good ideas: <br/>Composable Queries, Remote Effects, Server Sync
+			 </li>
+			 <li class="fragment">
+					 Good testability
+			 </li>
+		 </ul>
+	</section>
+		<section>
+		 <h2>om.next - Cons</h2>
+		 <img data-src="img/Om.next.svg">
+		 <ul>
+			 <li>
+					Complecting many things together - All or nothing
+			 </li>
+			 <li class="fragment">
+			 		Many new concepts and terms - Difficult to start with
+			 </li>
+			 <li class="fragment">
+					Usage of hidden meta data - Supprising results
+			 </li>
+			 <li class="fragment">
+					Still in Alpha
+			 </li>
+		 </ul>
+	</section>
+		</section>
+		<section>
+			<small><a href="https://twitter.com/RenePreissel">@RenePreissel</a></small>
+		 <h2>The End</h2>
+		 <p>
+		 <i>"Lisp is worth learning for the profound enlightenment experience you will have when you finally get it;
+			 <br/>that experience will make you a better programmer for the rest of your days, even if you never actually use Lisp itself a lot."</i>
+	 </p>
+		 <p>
+		 <small>- Eric Raymond, "How to Become a Hacker" </small>
+	 </p>
+	</section>
+
+			<div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
